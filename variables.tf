@@ -38,3 +38,11 @@ variable "database_subnet_cidr" {
   default     = ["10.0.51.0/24", "10.0.53.0/24"]
 
 }
+
+
+variable "iga_cidr" {
+  description = "internet gateway"
+  type        = string
+  default     = "0.0.0.0/0"
+
+}
