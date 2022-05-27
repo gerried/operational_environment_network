@@ -28,11 +28,6 @@ resource "aws_vpc" "kojitechs_vpc" {
   enable_dns_hostnames = true #to enable nat gateway
   enable_dns_support   = true #to enable nat gateway
 
-  tags = {
-    "Name" = "kojitech_vpc"
-  }
-}
-
 #using count to create public subnets
 
 resource "aws_subnet" "pub_subnet" {
@@ -71,6 +66,12 @@ resource "aws_subnet" "database_subnet" {
 
   tags = {
     Name = "database_subnet_${data.aws_availability_zones.azs.names[count.index]}"
+  }
+}
+
+
+  tags = {
+    "Name" = "kojitech_vpc"
   }
 }
 
@@ -173,3 +174,49 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
+#creating route table for private subnets
+resource "aws_route_table" "private" {
+  count  = length(var.priv_subnet_cidr)
+  vpc_id = local.vpc_id
+
+  route {
+    cidr_block     = var.iga_cidr
+    nat_gateway_id = aws_nat_gateway.Nat_gw[count.index].id
+  }
+
+  tags = {
+    Name = "private_subnet_RT_$(+count.index)"
+  }
+}
+
+
+#associating private subnets to private route table
+resource "aws_route_table_association" "private" {
+  count = length(var.priv_subnet_cidr)
+
+  subnet_id      = aws_subnet.priv_subnet[count.index].id
+  route_table_id = aws_route_table.private[count.index].id
+}
+
+
+#creating NAT gateway so that private subnets can talk to the internet
+resource "aws_nat_gateway" "Nat_gw" {
+  count         = length(var.priv_subnet_cidr)
+  allocation_id = aws_eip.eip.id
+  subnet_id     = aws_subnet.priv_subnet[count.index].id
+
+  tags = {
+    Name = "gw NAT"
+  }
+
+  # To ensure proper ordering, it is recommended to add an explicit dependency
+  # on the Internet Gateway for the VPC.
+  depends_on = [aws_internet_gateway.igw]
+}
+
+
+#creating EIP
+resource "aws_eip" "eip" {
+  vpc = true
+
+}
