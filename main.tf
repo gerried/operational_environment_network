@@ -27,58 +27,12 @@ resource "aws_vpc" "kojitechs_vpc" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true #to enable nat gateway
   enable_dns_support   = true #to enable nat gateway
-
-#using count to create public subnets
-
-resource "aws_subnet" "pub_subnet" {
-  count                   = length(var.pub_subnet_cidr)
-  vpc_id                  = local.vpc_id
-  cidr_block              = var.pub_subnet_cidr[count.index]
-  availability_zone       = data.aws_availability_zones.azs.names[count.index]
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = "public_subnet ${1 + count.index}"
-  }
-}
-
-#using count to create private subnets
-
-resource "aws_subnet" "priv_subnet" {
-  count             = length(var.priv_subnet_cidr)
-  vpc_id            = local.vpc_id
-  cidr_block        = var.priv_subnet_cidr[count.index]
-  availability_zone = data.aws_availability_zones.azs.names[count.index]
-
-  tags = {
-    Name = "priv_subnet_${data.aws_availability_zones.azs.names[count.index]}"
-  }
-}
-
-
-#using count to create database subnets
-
-resource "aws_subnet" "database_subnet" {
-  count             = length(var.database_subnet_cidr)
-  vpc_id            = local.vpc_id
-  cidr_block        = var.database_subnet_cidr[count.index]
-  availability_zone = data.aws_availability_zones.azs.names[count.index]
-
-  tags = {
-    Name = "database_subnet_${data.aws_availability_zones.azs.names[count.index]}"
-  }
-}
-
-
-  tags = {
-    "Name" = "kojitech_vpc"
-  }
 }
 
 
 #creating public subnet individually
 
-/*resource "aws_subnet" "pub_subnet_1" {
+resource "aws_subnet" "pub_subnet_1" {
   vpc_id                  = local.vpc_id
   cidr_block              = var.pub_subnet_cidr[0]
   availability_zone       = data.aws_availability_zones.azs.names[0]
@@ -138,85 +92,6 @@ resource "aws_subnet" "database_subnet_2" {
   tags = {
     Name = "database_subnet_${data.aws_availability_zones.azs.names[1]}"
   }
-}*/
-
-
-#creating public IGW
-
-resource "aws_internet_gateway" "igw" {
-  vpc_id = local.vpc_id
-
-  tags = {
-    Name = "igw"
-  }
-}
-
-#creating public route table
-
-resource "aws_route_table" "public" {
-  vpc_id = local.vpc_id
-
-  route {
-    cidr_block = var.iga_cidr
-    gateway_id = aws_internet_gateway.igw.id
-  }
-
-  tags = {
-    Name = "public_subnet_RT"
-  }
-}
-
-#associating public route table to public subnets
-resource "aws_route_table_association" "public" {
-  count = length(var.pub_subnet_cidr)
-
-  subnet_id      = aws_subnet.pub_subnet[count.index].id
-  route_table_id = aws_route_table.public.id
-}
-
-#creating route table for private subnets
-resource "aws_route_table" "private" {
-  count  = length(var.priv_subnet_cidr)
-  vpc_id = local.vpc_id
-
-  route {
-    cidr_block     = var.iga_cidr
-    nat_gateway_id = aws_nat_gateway.Nat_gw[count.index].id
-  }
-
-  tags = {
-    Name = "private_subnet_RT_$(+count.index)"
-  }
 }
 
 
-#associating private subnets to private route table
-resource "aws_route_table_association" "private" {
-  count = length(var.priv_subnet_cidr)
-
-  subnet_id      = aws_subnet.priv_subnet[count.index].id
-  route_table_id = aws_route_table.private[count.index].id
-}
-
-
-#creating NAT gateway so that private subnets can talk to the internet
-resource "aws_nat_gateway" "Nat_gw" {
-  count         = length(var.priv_subnet_cidr)
-  allocation_id = aws_eip.eip.id
-  subnet_id     = aws_subnet.priv_subnet[count.index].id
-
-  tags = {
-    Name = "gw NAT"
-  }
-
-  # To ensure proper ordering, it is recommended to add an explicit dependency
-  # on the Internet Gateway for the VPC.
-  depends_on = [aws_internet_gateway.igw]
-}
-
-
-#creating EIP
-resource "aws_eip" "eip" {
-  vpc = true
-
-}
