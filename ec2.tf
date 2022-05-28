@@ -1,5 +1,5 @@
 
-data "aws_ami" "ami" {
+/*data "aws_ami" "ami" {
   most_recent = true
 
   owners = ["amazon"]
@@ -60,5 +60,5 @@ resource "aws_instance" "web" {
   tags = {
     Name = "Terraform"
   }
-}
+}*/
 
