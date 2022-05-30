@@ -124,7 +124,6 @@ resource "aws_route_table" "route_table" {
 }
 
 #creating route table association for the public subnets
-
 resource "aws_route_table_association" "pub_subnet_1" {
   subnet_id      = aws_subnet.pub_subnet_1.id
   route_table_id = aws_route_table.route_table.id
