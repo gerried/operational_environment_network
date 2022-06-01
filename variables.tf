@@ -8,8 +8,8 @@ variable "region" {
 
 variable "vpc_cidr" {
   description = "vpc name"
-  type        = string
-  default     = "10.0.0.0/16"
+  type        = list(any)
+  default     = ["10.0.0.0/16"]
 }
 
 # list [""]
@@ -39,3 +39,9 @@ variable "database_subnet_cidr" {
 
 }
 
+
+variable "create_vpc" {
+  type        = bool
+  description = "Create vpc for kojitechs"
+  default     = true
+}

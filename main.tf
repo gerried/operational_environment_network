@@ -4,7 +4,6 @@ data "aws_availability_zones" "azs" {
 }
 
 locals {
-  vpc_id = aws_vpc.kojitechs_vpc.id
   mandatory_tag = {
     line_of_business        = "hospital"
     ado                     = "max"
@@ -19,153 +18,157 @@ locals {
     cell_name               = "WEB"
     component_name          = "kojitechs"
   }
+  azs        = data.aws_availability_zones.azs.names
+  vpc_id     = try(aws_vpc.kojitechs_vpc[0].id, "")
+  create_vpc = var.create_vpc
 }
+
 
 #creating VPC
 resource "aws_vpc" "kojitechs_vpc" {
+  count = local.create_vpc ? length(var.vpc_cidr) : 0
 
-  cidr_block           = var.vpc_cidr
-  enable_dns_hostnames = true #to enable nat gateway
-  enable_dns_support   = true #to enable nat gateway
+  cidr_block           = var.vpc_cidr[count.index]
+  enable_dns_hostnames = true
+  enable_dns_support   = true
 
   tags = {
     "Name" = "kojitechs_vpc"
   }
 }
 
-#creating IGW
-
+#creating IGW # 
 resource "aws_internet_gateway" "igw" {
-  vpc_id = local.vpc_id
+  count = local.create_vpc ? length(var.vpc_cidr) : 0
 
+  vpc_id = local.vpc_id
   tags = {
     Name = "kojitechs_igw"
   }
 }
 
 #creating public subnet individually
+resource "aws_subnet" "pub_subnet" {
+  count = local.create_vpc ? length(var.pub_subnet_cidr) : 0
 
-resource "aws_subnet" "pub_subnet_1" {
   vpc_id                  = local.vpc_id
-  cidr_block              = var.pub_subnet_cidr[0]
-  availability_zone       = data.aws_availability_zones.azs.names[0]
+  cidr_block              = var.pub_subnet_cidr[count.index]
+  availability_zone       = element(local.azs, count.index)
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "pub_subnet_1"
+    Name = "pub_subnet_${count.index + 1}"
   }
 }
 
-resource "aws_subnet" "pub_subnet_2" {
-  vpc_id                  = local.vpc_id
-  cidr_block              = var.pub_subnet_cidr[1]
-  availability_zone       = data.aws_availability_zones.azs.names[1]
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = "pub_subnet_2"
-  }
-}
-
-resource "aws_subnet" "priv_subnet_1" {
+resource "aws_subnet" "priv_subnet" {
+  count = local.create_vpc ? length(var.priv_subnet_cidr) : 0
   vpc_id            = local.vpc_id
-  cidr_block        = var.priv_subnet_cidr[0]
-  availability_zone = data.aws_availability_zones.azs.names[0]
+  cidr_block        = var.priv_subnet_cidr[count.index]
+  availability_zone = element(local.azs, count.index)
 
   tags = {
-    Name = "priv_subnet_${data.aws_availability_zones.azs.names[0]}" #appending the az name to the subn
+    Name = "priv_subnet_${element(local.azs, count.index)}" #appending the az name to the subn
   }
 }
 
-resource "aws_subnet" "priv_subnet_2" {
+resource "aws_subnet" "database_subnet" {
+   count = local.create_vpc ? length(var.database_subnet_cidr) : 0
+
   vpc_id            = local.vpc_id
-  cidr_block        = var.priv_subnet_cidr[1]
-  availability_zone = data.aws_availability_zones.azs.names[1]
+  cidr_block        = var.database_subnet_cidr[count.index]
+  availability_zone = element(local.azs, count.index)
 
   tags = {
-    Name = "priv_subnet_${data.aws_availability_zones.azs.names[1]}" #appending the az name to the subn
-  }
-}
-
-resource "aws_subnet" "database_subnet_1" {
-  vpc_id            = local.vpc_id
-  cidr_block        = var.database_subnet_cidr[0]
-  availability_zone = data.aws_availability_zones.azs.names[0]
-
-  tags = {
-    Name = "database_subnet_${data.aws_availability_zones.azs.names[0]}" #appending the az name to the subn
-  }
-}
-
-resource "aws_subnet" "database_subnet_2" {
-  vpc_id            = local.vpc_id
-  cidr_block        = var.database_subnet_cidr[1]
-  availability_zone = data.aws_availability_zones.azs.names[1]
-
-  tags = {
-    Name = "database_subnet_${data.aws_availability_zones.azs.names[1]}"
+    Name = "database_subnet_${element(local.azs, count.index)}" #appending the az name to the subn
   }
 }
 
 #creating public route table
-
 resource "aws_route_table" "route_table" {
-  vpc_id = local.vpc_id
+  count = local.create_vpc ? 1 : 0
 
+  vpc_id = local.vpc_id
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.igw.id 
+    gateway_id = aws_internet_gateway.igw[count.index].id
 
   }
 
   tags = {
-    Name = "kojitechs_route_table"
+    Name = "public_route_table"
   }
 }
 
 #creating route table association for the public subnets
-resource "aws_route_table_association" "pub_subnet_1" {
-  subnet_id      = aws_subnet.pub_subnet_1.id
-  route_table_id = aws_route_table.route_table.id
-}
+resource "aws_route_table_association" "pub_subnet" {
+   count = local.create_vpc ? length(var.pub_subnet_cidr) : 0
 
-resource "aws_route_table_association" "pub_subnet_2" {
-  subnet_id      = aws_subnet.pub_subnet_2.id
-  route_table_id = aws_route_table.route_table.id
+  subnet_id      = aws_subnet.pub_subnet[count.index].id
+  route_table_id = aws_route_table.route_table[0].id
 }
 
 # working with default route table
-
 resource "aws_default_route_table" "default_routetable" {
-  default_route_table_id = aws_vpc.kojitechs_vpc.default_route_table_id
+  count = local.create_vpc ? length(var.vpc_cidr) : 0
 
+  default_route_table_id = aws_vpc.kojitechs_vpc[count.index].default_route_table_id
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_nat_gateway.example.id  # NAT GATEWAY.  PPRIVATE()
-  }
-
-  tags = {
-    Name = "default_routetable"
+    gateway_id = aws_nat_gateway.example[0].id # NAT GATEWAY.  PPRIVATE()
   }
 }
 
 # creating NAT gateway
 resource "aws_nat_gateway" "example" {
-  allocation_id = aws_eip.eip.id
-  subnet_id     = aws_subnet.priv_subnet_1.id
+   count = local.create_vpc ? 1 : 0
+
+  allocation_id = aws_eip.eip[0].id
+  subnet_id     = aws_subnet.priv_subnet[0].id
 
   tags = {
-    Name = "gw NAT"
+    Name = "Gw_Nat"
   }
   depends_on = [aws_internet_gateway.igw]
 }
 
 #creating EIP
 resource "aws_eip" "eip" {
-  vpc      = true
-  depends_on = [aws_internet_gateway.igw ]
+   count = local.create_vpc ? 1 : 0
+  vpc        = true
+  depends_on = [aws_internet_gateway.igw]
 }
 
+locals {
+  pub_subnet = {
+    pub_subnet_1 =  {
+      cidr = "10.0.4.0/24"
+      az = local.azs[0]
+    }
+    pub_subnet_2 =  {
+      cidr = "10.0.6.0/24"
+      az = local.azs[1]
+    }
+  }
+  pub_subnet_3 =  {
+      cidr = "10.0.8.0/24"
+      az = local.azs[2]
+    }
+     pub_subnet_4 =  {
+      cidr = "10.0.10.0/24"
+      az = local.azs[3]
+    }
+}
 
+resource "aws_subnet" "pub_subnet_foreach" {
+for_each = local.create_vpc ? local.pub_subnet : {}
 
+  vpc_id                  = local.vpc_id
+  cidr_block              = each.value.cidr
+  availability_zone       = each.value.az
+  map_public_ip_on_launch = true
 
+  tags = {
+    Name = each.key
+  }
+}
