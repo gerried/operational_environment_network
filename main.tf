@@ -62,7 +62,7 @@ resource "aws_subnet" "pub_subnet" {
 }
 
 resource "aws_subnet" "priv_subnet" {
-  count = local.create_vpc ? length(var.priv_subnet_cidr) : 0
+  count             = local.create_vpc ? length(var.priv_subnet_cidr) : 0
   vpc_id            = local.vpc_id
   cidr_block        = var.priv_subnet_cidr[count.index]
   availability_zone = element(local.azs, count.index)
@@ -73,7 +73,7 @@ resource "aws_subnet" "priv_subnet" {
 }
 
 resource "aws_subnet" "database_subnet" {
-   count = local.create_vpc ? length(var.database_subnet_cidr) : 0
+  count = local.create_vpc ? length(var.database_subnet_cidr) : 0
 
   vpc_id            = local.vpc_id
   cidr_block        = var.database_subnet_cidr[count.index]
@@ -102,7 +102,7 @@ resource "aws_route_table" "route_table" {
 
 #creating route table association for the public subnets
 resource "aws_route_table_association" "pub_subnet" {
-   count = local.create_vpc ? length(var.pub_subnet_cidr) : 0
+  count = local.create_vpc ? length(var.pub_subnet_cidr) : 0
 
   subnet_id      = aws_subnet.pub_subnet[count.index].id
   route_table_id = aws_route_table.route_table[0].id
@@ -121,7 +121,7 @@ resource "aws_default_route_table" "default_routetable" {
 
 # creating NAT gateway
 resource "aws_nat_gateway" "example" {
-   count = local.create_vpc ? 1 : 0
+  count = local.create_vpc ? 1 : 0
 
   allocation_id = aws_eip.eip[0].id
   subnet_id     = aws_subnet.priv_subnet[0].id
@@ -134,34 +134,35 @@ resource "aws_nat_gateway" "example" {
 
 #creating EIP
 resource "aws_eip" "eip" {
-   count = local.create_vpc ? 1 : 0
+  count      = local.create_vpc ? 1 : 0
   vpc        = true
   depends_on = [aws_internet_gateway.igw]
 }
 
+/*
 locals {
   pub_subnet = {
-    pub_subnet_1 =  {
+    pub_subnet_1 = {
       cidr = "10.0.4.0/24"
-      az = local.azs[0]
+      az   = local.azs[0]
     }
-    pub_subnet_2 =  {
+    pub_subnet_2 = {
       cidr = "10.0.6.0/24"
-      az = local.azs[1]
+      az   = local.azs[1]
     }
   }
-  pub_subnet_3 =  {
-      cidr = "10.0.8.0/24"
-      az = local.azs[2]
-    }
-     pub_subnet_4 =  {
-      cidr = "10.0.10.0/24"
-      az = local.azs[3]
-    }
+  pub_subnet_3 = {
+    cidr = "10.0.8.0/24"
+    az   = local.azs[2]
+  }
+  pub_subnet_4 = {
+    cidr = "10.0.10.0/24"
+    az   = local.azs[3]
+  }
 }
 
 resource "aws_subnet" "pub_subnet_foreach" {
-for_each = local.create_vpc ? local.pub_subnet : {}
+  for_each = local.create_vpc ? local.pub_subnet : {}
 
   vpc_id                  = local.vpc_id
   cidr_block              = each.value.cidr
@@ -172,3 +173,4 @@ for_each = local.create_vpc ? local.pub_subnet : {}
     Name = each.key
   }
 }
+*/
