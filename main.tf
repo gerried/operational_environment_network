@@ -47,7 +47,7 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
-#creating public subnet individually
+#creating public subnets using counts
 resource "aws_subnet" "pub_subnet" {
   count = local.create_vpc ? length(var.pub_subnet_cidr) : 0
 
