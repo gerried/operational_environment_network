@@ -68,7 +68,7 @@ resource "aws_subnet" "priv_subnet" {
   availability_zone = element(local.azs, count.index)
 
   tags = {
-    Name = "priv_subnet_${element(local.azs, count.index)}" #appending the az name to the subn
+    Name = "priv_subnet_${element(local.azs, count.index)}" 
   }
 }
 
@@ -80,7 +80,7 @@ resource "aws_subnet" "database_subnet" {
   availability_zone = element(local.azs, count.index)
 
   tags = {
-    Name = "database_subnet_${element(local.azs, count.index)}" #appending the az name to the subn
+    Name = "database_subnet_${element(local.azs, count.index)}" 
   }
 }
 
