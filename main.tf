@@ -91,7 +91,7 @@ resource "aws_route_table" "route_table" {
   vpc_id = local.vpc_id
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.igw[count.index].id
+    gateway_id = aws_internet_gateway.igw[0].id
 
   }
 
@@ -112,7 +112,8 @@ resource "aws_route_table_association" "pub_subnet" {
 resource "aws_default_route_table" "default_routetable" {
   count = local.create_vpc ? length(var.vpc_cidr) : 0
 
-  default_route_table_id = aws_vpc.kojitechs_vpc[count.index].default_route_table_id
+  default_route_table_id = try(aws_vpc.kojitechs_vpc[0].default_route_table_id, "")
+
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_nat_gateway.example[0].id # NAT GATEWAY.  PPRIVATE()
