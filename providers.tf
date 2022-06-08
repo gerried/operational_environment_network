@@ -18,7 +18,7 @@ terraform {
 
 # Configure the AWS Provider
 provider "aws" {
-  region = var.aws_region
+  region = var.region
 
   assume_role {
     role_arn = "arn:aws:iam::${lookup(var.environment, terraform.workspace)}:role/Role_For-S3_Creation"
