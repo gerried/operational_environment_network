@@ -2,7 +2,7 @@ terraform {
   required_version = ">=1.1.5"
 
   backend "s3" {
-    bucket         = "registration-app-with-end-end-tf"
+    bucket         = "perfect-operational-environment-network-tf"
     dynamodb_table = "terraform-lock"
     key            = "path/env"
     region         = "us-east-1"
