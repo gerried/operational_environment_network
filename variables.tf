@@ -45,3 +45,9 @@ variable "create_vpc" {
   description = "Create vpc for kojitechs"
   default     = true
 }
+
+variable "environment" {
+  description = "Environment this template would be deployed to"
+  type        = map(string)
+  default     = {}
+}
