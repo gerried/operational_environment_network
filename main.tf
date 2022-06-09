@@ -68,7 +68,7 @@ resource "aws_subnet" "priv_subnet" {
   availability_zone = element(local.azs, count.index)
 
   tags = {
-    Name = "priv_subnet_${element(local.azs, count.index)}" #appending the az name to the subn
+    Name = "priv_subnet_${element(local.azs, count.index)}" 
   }
 }
 
@@ -80,7 +80,7 @@ resource "aws_subnet" "database_subnet" {
   availability_zone = element(local.azs, count.index)
 
   tags = {
-    Name = "database_subnet_${element(local.azs, count.index)}" #appending the az name to the subn
+    Name = "database_subnet_${element(local.azs, count.index)}" 
   }
 }
 
@@ -91,7 +91,7 @@ resource "aws_route_table" "route_table" {
   vpc_id = local.vpc_id
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.igw[count.index].id
+    gateway_id = aws_internet_gateway.igw[0].id
 
   }
 
@@ -112,7 +112,8 @@ resource "aws_route_table_association" "pub_subnet" {
 resource "aws_default_route_table" "default_routetable" {
   count = local.create_vpc ? length(var.vpc_cidr) : 0
 
-  default_route_table_id = aws_vpc.kojitechs_vpc[count.index].default_route_table_id
+  default_route_table_id = try(aws_vpc.kojitechs_vpc[0].default_route_table_id, "")
+
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_nat_gateway.example[0].id # NAT GATEWAY.  PPRIVATE()
@@ -124,7 +125,7 @@ resource "aws_nat_gateway" "example" {
   count = local.create_vpc ? 1 : 0
 
   allocation_id = aws_eip.eip[0].id
-  subnet_id     = aws_subnet.priv_subnet[0].id
+  subnet_id     = aws_subnet.pub_subnet[0].id
 
   tags = {
     Name = "Gw_Nat"
@@ -138,39 +139,3 @@ resource "aws_eip" "eip" {
   vpc        = true
   depends_on = [aws_internet_gateway.igw]
 }
-
-/*
-locals {
-  pub_subnet = {
-    pub_subnet_1 = {
-      cidr = "10.0.4.0/24"
-      az   = local.azs[0]
-    }
-    pub_subnet_2 = {
-      cidr = "10.0.6.0/24"
-      az   = local.azs[1]
-    }
-  }
-  pub_subnet_3 = {
-    cidr = "10.0.8.0/24"
-    az   = local.azs[2]
-  }
-  pub_subnet_4 = {
-    cidr = "10.0.10.0/24"
-    az   = local.azs[3]
-  }
-}
-
-resource "aws_subnet" "pub_subnet_foreach" {
-  for_each = local.create_vpc ? local.pub_subnet : {}
-
-  vpc_id                  = local.vpc_id
-  cidr_block              = each.value.cidr
-  availability_zone       = each.value.az
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = each.key
-  }
-}
-*/
