@@ -139,39 +139,3 @@ resource "aws_eip" "eip" {
   vpc        = true
   depends_on = [aws_internet_gateway.igw]
 }
-
-/*
-locals {
-  pub_subnet = {
-    pub_subnet_1 = {
-      cidr = "10.0.4.0/24"
-      az   = local.azs[0]
-    }
-    pub_subnet_2 = {
-      cidr = "10.0.6.0/24"
-      az   = local.azs[1]
-    }
-  }
-  pub_subnet_3 = {
-    cidr = "10.0.8.0/24"
-    az   = local.azs[2]
-  }
-  pub_subnet_4 = {
-    cidr = "10.0.10.0/24"
-    az   = local.azs[3]
-  }
-}
-
-resource "aws_subnet" "pub_subnet_foreach" {
-  for_each = local.create_vpc ? local.pub_subnet : {}
-
-  vpc_id                  = local.vpc_id
-  cidr_block              = each.value.cidr
-  availability_zone       = each.value.az
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = each.key
-  }
-}
-*/
