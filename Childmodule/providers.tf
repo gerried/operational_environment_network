@@ -18,7 +18,7 @@ terraform {
 }
 
 provider "aws" {
-  region  = var.region
+  region  = "us-east-1"
   profile = "default"
   default_tags {
     tags = local.mandatory_tag
