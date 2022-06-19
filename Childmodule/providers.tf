@@ -18,9 +18,24 @@ terraform {
 }
 
 provider "aws" {
-  region  = "us-east-1"
-  profile = "default"
+  region = "us-east-1"
+
+  assume_role {
+    role_arn = "arn:aws:iam::${lookup(var.env, terraform.workspace)}:role/Terraform_Admin_Role"
+  }
   default_tags {
     tags = local.mandatory_tag
   }
 }
+
+# arn:aws:iam::${lookup(var.env,terraform.workspace)}:role/Terraform_Admin_Role
+
+# variable "env" {
+#   description = "List of all accounts"
+#   type = map(string)
+#   default = {
+#     "sbx" = "010342263745"
+#     "dev" = "883250726777"
+#     "prod" = "524913668773"
+#   }
+# }
