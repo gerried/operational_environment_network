@@ -12,6 +12,10 @@ resource "aws_vpc" "kojitechs_vpc" {
   cidr_block           = var.vpc_cidr[count.index]
   enable_dns_hostnames = var.enable_dns_hostnames
   enable_dns_support   = var.enable_dns_support
+
+  tags = {
+    Name = "kojitechs_vpc"
+  }
 }
 
 #creating IGW # 
