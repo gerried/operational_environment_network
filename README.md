@@ -53,7 +53,9 @@ No modules.
 |------|-------------|
 | <a name="output_database_subnet"></a> [database\_subnet](#output\_database\_subnet) | Kojitechs database subnet id |
 | <a name="output_priv_subnet"></a> [priv\_subnet](#output\_priv\_subnet) | Kojitechs private subnet id |
+| <a name="output_public_cidr"></a> [public\_cidr](#output\_public\_cidr) | Kojitechs public subnet id |
 | <a name="output_public_subnet"></a> [public\_subnet](#output\_public\_subnet) | Kojitechs public subnet id |
+| <a name="output_vpc_cidr"></a> [vpc\_cidr](#output\_vpc\_cidr) | Kojitechs vpc cidr |
 | <a name="output_vpc_id"></a> [vpc\_id](#output\_vpc\_id) | Kojitechs vpc id |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Usage of module
