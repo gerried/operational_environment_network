@@ -31,29 +31,29 @@ variable "pub_subnet_cidr" {
 variable "pub_subnet_az" {
   description = "Public subnet azs"
   type        = list(any)
-  deafult = []
+  default = []
 }
 
 variable "priv_subnet_cidr" {
   description = "private subnet cidr"
   type        = list(any)
-    deafult = []
+    default = []
 }
 
 variable "priv_subnet_az" {
   description = "Private subnet azs"
   type        = list(any)
-    deafult = []
+    default = []
 }
 
 variable "database_subnet_cidr" {
   description = "database subnet cidr"
   type        = list(any)
-    deafult = []
+    default = []
 }
 
 variable "database_subnet_az" {
   description = "Database subnet az"
   type        = list(any)
-    deafult = []
+    default = []
 }
